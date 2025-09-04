@@ -53,7 +53,7 @@ class VersionManager:
         if not os.path.exists(manifest_path):
             return "Not Found"
         
-        with open(manifest_path, 'r') as f:
+        with open(manifest_path, 'r', encoding='utf-8') as f:
             data = vdf.load(f)
         
         appstate = data.get('AppState', {})
@@ -119,34 +119,43 @@ class VersionManager:
         user_path = self.zomboid_user_path
         manifest_path = self.get_manifest_path()
 
-        if os.path.islink(game_path) or os.path.isdir(game_path):
-            if os.path.islink(game_path):
-                os.unlink(game_path)
-            else: # If it's a real directory, remove it
-                shutil.rmtree(game_path)
+        # Safely remove directory/symlink
+        def safe_remove(path):
+            if not os.path.exists(path) and not os.path.islink(path):
+                return
+            if os.path.islink(path):
+                os.unlink(path)
+            elif os.path.isdir(path):
+                shutil.rmtree(path)
 
-        if os.path.islink(user_path) or os.path.isdir(user_path):
-            if os.path.islink(user_path):
-                os.unlink(user_path)
-            else:
-                shutil.rmtree(user_path)
+        safe_remove(game_path)
+        safe_remove(user_path)
         
         if os.path.exists(manifest_path):
             os.remove(manifest_path)
 
+    # --- THIS FUNCTION IS THE ONLY ONE THAT CHANGED ---
     def _create_symlinks(self, profile_name):
         """A helper function to create the symlinks for a given profile."""
         profile_path = os.path.join(self.manager_path, profile_name)
-        source_game_files = os.path.join(profile_path, 'GameFiles')
-        source_user_data = os.path.join(profile_path, 'UserData')
         
-        target_game_files = self.get_game_install_path()
-        target_user_data = self.zomboid_user_path
+        # Normalize paths to use the correct OS-specific separators (e.g., '\' on Windows)
+        source_game_files = os.path.normpath(os.path.join(profile_path, 'GameFiles'))
+        source_user_data = os.path.normpath(os.path.join(profile_path, 'UserData'))
+        
+        target_game_files = os.path.normpath(self.get_game_install_path())
+        target_user_data = os.path.normpath(self.zomboid_user_path)
         
         system = platform.system()
         if system == "Windows":
-            subprocess.run(['cmd', '/c', 'mklink', '/D', target_game_files, source_game_files], check=True)
-            subprocess.run(['cmd', '/c', 'mklink', '/D', target_user_data, source_user_data], check=True)
+            # On Windows, we build the full command as a string to pass to the shell,
+            # which correctly handles quotes around paths with spaces.
+            cmd_game = f'mklink /D "{target_game_files}" "{source_game_files}"'
+            cmd_user = f'mklink /D "{target_user_data}" "{source_user_data}"'
+            
+            # shell=True is needed here to process the command correctly.
+            subprocess.run(cmd_game, check=True, shell=True, capture_output=True)
+            subprocess.run(cmd_user, check=True, shell=True, capture_output=True)
         else: # Linux/macOS
             os.symlink(source_game_files, target_game_files, target_is_directory=True)
             os.symlink(source_user_data, target_user_data, target_is_directory=True)

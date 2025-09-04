@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
                 self.ui.steamappsPathEdit.setText(os.path.join(steam_path, 'steamapps'))
         if not self.manager.zomboid_user_path:
             self.ui.zomboidUserPathEdit.setText(get_default_zomboid_user_path())
-        self.save_settings()
+        #self.save_settings()
 
     def save_settings(self):
         self.manager.manager_path = self.ui.managerPathEdit.text()
