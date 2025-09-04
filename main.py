@@ -36,6 +36,9 @@ class MainWindow(QMainWindow):
         self.refresh_ui()
         self.check_permissions()
 
+        # Hide the progress bar on startup
+        self.ui.progressBar.setVisible(False)
+
     def setup_connections(self):
         self.ui.browseManagerPathBtn.clicked.connect(self.browse_manager_path)
         self.ui.browseSteamappsPathBtn.clicked.connect(self.browse_steamapps_path)
@@ -106,53 +109,59 @@ class MainWindow(QMainWindow):
         is_item_selected = len(self.ui.versionListWidget.selectedItems()) > 0
         self.ui.switchToVersionBtn.setEnabled(is_item_selected)
 
+    # REVISED capture_version method
     def capture_version(self):
-        profile_name, ok = QInputDialog.getText(
-            self, "Store Version", "Enter a name for this profile (e.g., 'Build 42 - Unstable'):"
-        )
+        profile_name, ok = QInputDialog.getText(self, "Store Version", "Enter a name for this profile (e.g., 'Build 42 - Unstable'):")
+        
         if not (ok and profile_name):
             return
 
-        try:
-            game_size = sum(
-                os.path.getsize(os.path.join(dirpath, filename))
-                for dirpath, _, filenames in os.walk(self.manager.get_game_install_path())
-                for filename in filenames
-            )
-            free_space = get_disk_free_space(self.manager.manager_path)
+        # --- Immediately start visual feedback ---
+        self.set_ui_busy(True) # Disable buttons and show progress bar
 
-            if game_size * 1.1 > free_space:
-                QMessageBox.critical(self, "Error", f"Not enough disk space in '{self.manager.manager_path}'.")
-                return
-        except FileNotFoundError:
-            QMessageBox.critical(self, "Error", "Could not calculate game size. Is the game path correct?")
-            return
-
-        self.ui.captureVersionBtn.setEnabled(False)
-        self.ui.switchToVersionBtn.setEnabled(False)
-        self.ui.statusbar.showMessage("Capturing version... This will take a while.")
-
+        # --- Threading setup ---
         self.thread = QThread()
-        self.worker = CaptureWorker(self.manager, profile_name)
+        # Pass the manager and profile name to the worker
+        self.worker = CaptureWorker(self.manager, profile_name) 
         self.worker.moveToThread(self.thread)
 
+        # Connect signals and slots
         self.thread.started.connect(self.worker.run)
         self.worker.finished.connect(self.on_capture_finished)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
+        # Start the thread
         self.thread.start()
 
+    # REVISED on_capture_finished method
     def on_capture_finished(self, success, message):
+        """This function is called when the worker thread is done."""
         if success:
             QMessageBox.information(self, "Success", message)
         else:
             QMessageBox.critical(self, "Error", f"An error occurred: {message}")
-
-        self.ui.statusbar.clearMessage()
+        
+        # Clean up and re-enable UI
+        self.set_ui_busy(False) # Re-enable buttons and hide progress bar
         self.refresh_ui()
-        self.ui.captureVersionBtn.setEnabled(True)
+
+    # NEW helper method to manage the UI state
+    def set_ui_busy(self, is_busy):
+        """Disables/enables controls and shows/hides the progress bar."""
+        self.ui.captureVersionBtn.setEnabled(not is_busy)
+        self.ui.switchToVersionBtn.setEnabled(not is_busy)
+        self.ui.settingsGroup.setEnabled(not is_busy)
+
+        if is_busy:
+            self.ui.progressBar.setVisible(True)
+            self.ui.progressBar.setRange(0, 0) # Indeterminate mode
+            self.ui.statusbar.showMessage("Working... The application is responsive.")
+        else:
+            self.ui.progressBar.setVisible(False)
+            self.ui.progressBar.setRange(0, 100) # Reset mode
+            self.ui.statusbar.clearMessage()
 
     def switch_version(self):
         selected_item = self.ui.versionListWidget.currentItem()
