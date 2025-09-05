@@ -107,7 +107,7 @@ It works by using the dark magic of **symbolic links** to keep separate, isolate
      - Install PyInstaller: `pip install pyinstaller`
      - Run the build command:
        ```bash
-       pyinstaller --onefile --windowed --name PZVersionManager main.py
+       pyinstaller --onefile --windowed --name PZVersionManager --icon="assets/icon.ico" --add-data "ui;ui" --add-data "assets;assets" main.py
        ```
      - Find the final `.exe` in the `dist/` folder.
 </details>
