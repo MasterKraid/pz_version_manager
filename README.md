@@ -135,9 +135,11 @@ It works by using the dark magic of **symbolic links** to keep separate, isolate
 ## Frequently Asked Questions
 
 **Q: Why do I *really* need to run this as an administrator?**
+
 **A:** Because Windows doesn't trust just anyone to create symbolic links, which is the magic that makes this app work. No admin rights, no magic.
 
 **Q: The app threw an error about "mklink"! Is my game gone?!**
+
 **A:** No, calm down. Your game is safe in the Manager Storage Folder. This error almost always means you forgot to run the app as an administrator. Close the app, run it as admin, and use the "Switch to Selected Version" button to try linking again.
 
 ---
