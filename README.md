@@ -1,5 +1,5 @@
 
-# Spiffo's Save-Swapper: The Project Zomboid Version Manager
+# Project Zomboid Version Manager
 
 <p align="center">
   <!-- NEED TO MAKE MY FANART NOW AAAAAAA rem:(200px wide.) -->
