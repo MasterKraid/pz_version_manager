@@ -35,8 +35,10 @@ It works by using the dark magic of **symbolic links** to keep separate, isolate
 ---
 
 
-## Screenshot
-![Application Screenshot](assets/screenshot.png)
+<p align="center">
+  <img src="assets/screenshot.png" alt="Application Screenshot" width="60%"/>
+</p>
+
 
 ---
 
