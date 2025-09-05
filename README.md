@@ -3,7 +3,7 @@
 
 <p align="center">
   <!-- NEED TO MAKE MY FANART NOW AAAAAAA rem:(200px wide.) -->
-  <img src="IMAGE_LINK.png" alt="Imagine: A heroic Spiffo the Raccoon managing game builds." width="200"/>
+  <img src="assets/spiffofloppy.png" alt="Imagine: A heroic Spiffo the Raccoon holding a floppy." width="200"/>
 </p>
 
 <p align="center">
