@@ -5,6 +5,7 @@ import os
 import webbrowser
 from PySide6.QtWidgets import (QApplication, QMainWindow, QFileDialog, 
                                QMessageBox, QInputDialog, QListWidgetItem, QStatusBar)
+from PySide6.QtGui import QIcon
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import Qt, QThread
 
@@ -13,14 +14,24 @@ from core.utils import (get_default_steam_path, get_default_zomboid_user_path,
                       check_symlink_permissions, get_disk_free_space)
 from core.worker import CaptureWorker
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
+#   script_dir = os.path.dirname(os.path.abspath(__file__))
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         
         loader = QUiLoader()
-        ui_file_path = os.path.join(script_dir, "ui", "main_window.ui")
+        ui_file_path = resource_path(os.path.join("ui", "main_window.ui"))
         
         # Load the UI file. It returns a QWidget (our central widget).
         self.ui = loader.load(ui_file_path, self)
@@ -31,7 +42,13 @@ class MainWindow(QMainWindow):
         # Set the window title from the UI file
         self.setWindowTitle(self.ui.windowTitle())
         self.resize(self.ui.size())
-        self.setFixedSize(650, 600)
+        self.resize(650, 600)
+
+        
+        # icon setup:
+        icon_path = resource_path(os.path.join('assets', 'icon.ico'))
+        self.setWindowIcon(QIcon(icon_path))
+
 
         # Manually create a status bar for our QMainWindow
         self.statusbar = QStatusBar()
