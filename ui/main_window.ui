@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class> <!-- This line is not the one to change -->
- <widget class="QWidget" name="MainWindow"> <!-- **** THIS LINE CHANGED from QMainWindow to QWidget **** -->
+ <class>MainWindow</class>
+ <widget class="QWidget" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>650</width>
-    <height>550</height> <!-- Adjusted height slightly as QWidget has no status bar space -->
+    <height>550</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Project Zomboid Version Manager</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-    <!-- ... all the group boxes and layouts ... -->
-    <!-- The content from <item> to </item> remains exactly the same -->
     <item>
      <widget class="QGroupBox" name="settingsGroup">
       <property name="title">
@@ -129,6 +127,15 @@
            </property>
           </spacer>
          </item>
+         <!--NEW PLAY BUTTON ADDED -->
+         <item>
+          <widget class="QPushButton" name="playBtn">
+           <property name="text">
+            <string>Play</string>
+           </property>
+          </widget>
+         </item>
+         <!--NEW PLAY BUTTON -->
          <item>
           <widget class="QPushButton" name="switchToVersionBtn">
            <property name="text">
@@ -191,8 +198,7 @@ p, li { white-space: pre-wrap; }
      </widget>
     </item>
    </layout>
- </widget>
- <!-- The <widget class="QStatusBar"...> has been removed because it belongs to QMainWindow, not QWidget -->
+  </widget>
  <resources/>
  <connections/>
 </ui>

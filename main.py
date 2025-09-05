@@ -2,6 +2,7 @@
 
 import sys
 import os
+import webbrowser
 from PySide6.QtWidgets import (QApplication, QMainWindow, QFileDialog, 
                                QMessageBox, QInputDialog, QListWidgetItem, QStatusBar)
 from PySide6.QtUiTools import QUiLoader
@@ -26,10 +27,11 @@ class MainWindow(QMainWindow):
         
         # Set this loaded QWidget as the central content of our QMainWindow.
         self.setCentralWidget(self.ui)
-
+        #debug self.setWindowTitle("Project Zomboid Version Manager") 
         # Set the window title from the UI file
         self.setWindowTitle(self.ui.windowTitle())
         self.resize(self.ui.size())
+        self.setFixedSize(650, 600)
 
         # Manually create a status bar for our QMainWindow
         self.statusbar = QStatusBar()
@@ -57,10 +59,40 @@ class MainWindow(QMainWindow):
         self.ui.captureVersionBtn.clicked.connect(self.capture_version)
         self.ui.switchToVersionBtn.clicked.connect(self.switch_version)
         self.ui.versionListWidget.itemSelectionChanged.connect(self.update_button_states)
-        # --- ADD THIS NEW CONNECTION ---
         self.ui.prepareNewVersionBtn.clicked.connect(self.prepare_for_new_version)
+        self.ui.playBtn.clicked.connect(self.launch_game)
 
-    # --- ADD THIS ENTIRE NEW METHOD ---
+    def launch_game(self):
+        """Launches Project Zomboid via the Steam URL protocol."""
+        self.statusbar.showMessage("Launching Project Zomboid via Steam...", 3000)
+        webbrowser.open('steam://run/108600')
+
+    def refresh_ui(self):
+        self.ui.versionListWidget.clear()
+        stored_versions = self.manager.get_stored_versions()
+        current_version_name = self.manager.detect_current_version_name()
+        self.ui.activeVersionLabel.setText(f"Detected Active Version:\n{current_version_name}")
+        active_profile = ""
+        game_path = self.manager.get_game_install_path()
+        if os.path.islink(game_path):
+            try:
+                target_path = os.readlink(game_path)
+                active_profile = os.path.basename(os.path.dirname(target_path))
+            except Exception:
+                pass 
+        for version in stored_versions:
+            item = QListWidgetItem(version)
+            if version == active_profile:
+                item.setText(f"{version} (Active)")
+                item.setForeground(Qt.green)
+            self.ui.versionListWidget.addItem(item)
+        
+        # --- ADD THIS LINE TO CONTROL THE PLAY BUTTON'S STATE ---
+        self.ui.playBtn.setEnabled(bool(active_profile)) # Enable only if a version is active
+
+        self.update_button_states()
+
+    # ... (all other methods remain exactly the same) ...
     def prepare_for_new_version(self):
         """
         Safely unlinks the currently active version to prepare for a new Steam download.
@@ -74,7 +106,6 @@ class MainWindow(QMainWindow):
         if reply == QMessageBox.Yes:
             try:
                 self.statusbar.showMessage("Unlinking current version...")
-                # The manager already has the perfect function for this
                 self.manager._remove_symlinks_and_manifest()
                 self.statusbar.showMessage("Successfully unlinked. Ready for new version download.", 5000)
                 # Refresh the UI to show that nothing is active
@@ -83,13 +114,10 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Error", f"An error occurred while unlinking: {e}")
                 self.statusbar.clearMessage()
 
-    # --- And modify load_settings to remove the "Settings saved" on startup message ---
     def load_settings(self):
         self.ui.managerPathEdit.setText(self.manager.manager_path)
         self.ui.steamappsPathEdit.setText(self.manager.steamapps_path)
         self.ui.zomboidUserPathEdit.setText(self.manager.zomboid_user_path)
-        
-        # We need to know if we changed anything to avoid saving unnecessarily
         paths_were_empty = not self.manager.steamapps_path or not self.manager.zomboid_user_path
         
         if not self.manager.steamapps_path:
