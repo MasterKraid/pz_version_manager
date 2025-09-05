@@ -93,7 +93,7 @@ class VersionManager:
         shutil.copy2(manifest_path, dest_manifest)
 
         # 4. Re-create symlinks to keep the captured version active
-        self._create_symlinks(profile_name)
+        #self._create_symlinks(profile_name)
         print("Capture complete.")
 
     def switch_to_version(self, profile_name):

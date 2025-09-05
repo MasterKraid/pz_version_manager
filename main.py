@@ -57,6 +57,57 @@ class MainWindow(QMainWindow):
         self.ui.captureVersionBtn.clicked.connect(self.capture_version)
         self.ui.switchToVersionBtn.clicked.connect(self.switch_version)
         self.ui.versionListWidget.itemSelectionChanged.connect(self.update_button_states)
+        # --- ADD THIS NEW CONNECTION ---
+        self.ui.prepareNewVersionBtn.clicked.connect(self.prepare_for_new_version)
+
+    # --- ADD THIS ENTIRE NEW METHOD ---
+    def prepare_for_new_version(self):
+        """
+        Safely unlinks the currently active version to prepare for a new Steam download.
+        """
+        reply = QMessageBox.question(self, "Confirm Preparation", 
+                                     "This will unlink the currently active version and remove the game manifest. "
+                                     "This is the correct step before downloading a new version from Steam.\n\n"
+                                     "Are you sure you want to continue?",
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.Yes:
+            try:
+                self.statusbar.showMessage("Unlinking current version...")
+                # The manager already has the perfect function for this
+                self.manager._remove_symlinks_and_manifest()
+                self.statusbar.showMessage("Successfully unlinked. Ready for new version download.", 5000)
+                # Refresh the UI to show that nothing is active
+                self.refresh_ui() 
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"An error occurred while unlinking: {e}")
+                self.statusbar.clearMessage()
+
+    # --- And modify load_settings to remove the "Settings saved" on startup message ---
+    def load_settings(self):
+        self.ui.managerPathEdit.setText(self.manager.manager_path)
+        self.ui.steamappsPathEdit.setText(self.manager.steamapps_path)
+        self.ui.zomboidUserPathEdit.setText(self.manager.zomboid_user_path)
+        
+        # We need to know if we changed anything to avoid saving unnecessarily
+        paths_were_empty = not self.manager.steamapps_path or not self.manager.zomboid_user_path
+        
+        if not self.manager.steamapps_path:
+            steam_path = get_default_steam_path()
+            if steam_path:
+                self.ui.steamappsPathEdit.setText(os.path.join(steam_path, 'steamapps'))
+        if not self.manager.zomboid_user_path:
+            self.ui.zomboidUserPathEdit.setText(get_default_zomboid_user_path())
+        
+        # Only save if we just auto-filled the paths for the first time
+        if paths_were_empty:
+            self.save_settings()
+        else:
+            # Otherwise, just apply the paths to the manager silently
+            self.manager.manager_path = self.ui.managerPathEdit.text()
+            self.manager.steamapps_path = self.ui.steamappsPathEdit.text()
+            self.manager.zomboid_user_path = self.ui.zomboidUserPathEdit.text()
+            self.refresh_ui()
 
     def capture_version(self):
         profile_name, ok = QInputDialog.getText(self, "Store Version", "Enter a name for this profile (e.g., 'Build 42 - Unstable'):")
