@@ -1,6 +1,4 @@
 
-# Project Zomboid Version Manager
-
 <p align="center">
   <!-- NEED TO MAKE MY FANART NOW AAAAAAA rem:(200px wide.) -->
   <img src="assets/spiffofloppy.png" alt="Imagine: A heroic Spiffo the Raccoon holding a floppy." width="200"/>
@@ -17,6 +15,8 @@
 </p>
 
 ---
+# Project Zomboid Version Manager
+
 
 ## What is This?
 
